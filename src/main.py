@@ -390,7 +390,7 @@ robot = rb.RobotControl(host="192.168.12.188", port=2001)
 # while True:
 #     robot.send_to_robot(robot._build_command([0x06, 0x04], 0.1))
     
-# robot.send_to_robot(robot.set_rotation(60), 0.001)
+robot.send_to_robot(robot.set_rotation(60, 'left'))
 robot.follow_path(FINAL_PATH, 100)
 # robot.set_rotation(30)
 
