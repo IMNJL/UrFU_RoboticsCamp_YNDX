@@ -87,40 +87,39 @@ class RobotControl:
         """Устанавливает скорость правого двигателя (от 0 до 100)"""
         return self._build_command([0x02], [0x02, speed])
 
-    def set_rotation(self, angle):
-        if angle == 15:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.235)
-        elif angle == 30:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.2)
-        elif angle == 45:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.23)
-        elif angle == 60:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.38)
-        elif angle == 90:
-            byte_command = self.set_left_motor_speed(90) + self.set_right_motor_speed(80) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.57)
-            
-            
-    def set_rotation_r(self, angle):
-        if angle == 15:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.235)
-        elif angle == 30:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.22)
-        elif angle == 45:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.3)
-        elif angle == 60:
-            byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.39)
-        elif angle == 90:
-            byte_command = self.set_left_motor_speed(90) + self.set_right_motor_speed(80) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.587)
+    def set_rotation(self, angle, direction):
+        if direction == 'left':
+            if angle == 15:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
+                self.send_to_robot(byte_command, 0.235)
+            elif angle == 30:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
+                self.send_to_robot(byte_command, 0.2)
+            elif angle == 45:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
+                self.send_to_robot(byte_command, 0.23)
+            elif angle == 60:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
+                self.send_to_robot(byte_command, 0.38)
+            elif angle == 90:
+                byte_command = self.set_left_motor_speed(90) + self.set_right_motor_speed(80) + self.move_direction('turn_left')
+                self.send_to_robot(byte_command, 0.57)
+        else:        
+            if angle == 15:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
+                self.send_to_robot(byte_command, 0.235)
+            elif angle == 30:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
+                self.send_to_robot(byte_command, 0.22)
+            elif angle == 45:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
+                self.send_to_robot(byte_command, 0.3)
+            elif angle == 60:
+                byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
+                self.send_to_robot(byte_command, 0.39)
+            elif angle == 90:
+                byte_command = self.set_left_motor_speed(90) + self.set_right_motor_speed(80) + self.move_direction('turn_right')
+                self.send_to_robot(byte_command, 0.587)
             
             
     def set_rotation_func(self, angle):
@@ -165,46 +164,11 @@ class RobotControl:
             raise ValueError("Invalid light state")
 
 
-    def move_meters(self, meters=100, delay=0.1):
-        byte_command = self.move_robot('forward', meters)
+    def move_meters(self, cantimeters, delay):
+        delay = 0.23506 * cantimeters + 0.189187
+        byte_command = self.move_robot('forward', 80)
         self.send_to_robot(byte_command, delay)
-        
-        
-    # def follow_path(self, path):
-    #     """Следовать по пути, найденному алгоритмом A*"""
-
-    #     for i in range(len(path) - 1):
-    #         current = path[i]
-    #         next_pos = path[i + 1]
-    #         direction = self.get_direction(current, next_pos)
-    #         self.send_to_robot(self.move_robot(direction, speed=50))
-    #         time.sleep(1)  # Подождать 1 секунду между движениями
-
-    # def get_direction(self, current, next_pos):
-    #     """Определить направление движения на основе текущей и следующей позиции"""
-    #     if next_pos[0] > current[0]:
-    #         return 'forward'
-    #     elif next_pos[0] < current[0]:
-    #         return 'backward'
-    #     elif next_pos[1] > current[1]:
-    #         return 'turn_right'
-    #     elif next_pos[1] < current[1]:
-    #         return 'turn_left'
-    #     else:
-    #         return 'stop'
-    # def follow_path(self, path):
-    #     for i in range(len(path)):
-    #         if (path[i][0] == 'null'):
-    #             self.move_meters(path[i][1], 0.1)
-    #         elif (path[i][0] == 'right'):
-    #             self.set_rotation_r(90)
-    #             self.move_meters(path[i][1], 0.1)
-    #         elif (path[i][0] == 'left'):
-    #             self.set_rotation(90)
-    #             self.move_meters(path[i][1], 0.1)
-    #         else:
-    #             print("Goyda")
-    
+   
     def follow_path(self, path_commands, path_speed=50, base_delay=0.5, unit_delay=0.1):
         if not path_commands:
             print("Путь не найден.")
@@ -292,3 +256,8 @@ class RobotControl:
         """Обновляет текущее направление робота."""
         print(f"Меняем ориентацию на: {new_orientation}")
         self.orientation = new_orientation
+        
+    def ultrasonic_avoid(self):
+        distance = self.receive_from_robot()
+        if distance < 2:
+            command = self.move_direction('stop')
