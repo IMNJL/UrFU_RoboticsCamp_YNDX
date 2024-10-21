@@ -6,6 +6,9 @@ class RobotControl:
     def __init__(self, host, port):
         self.host = host
         self.port = port
+        self.x = 0  # Начальная координата X
+        self.y = 0
+        self.orientation = 'up'  # Начальное направление робота
         self.commands = {
             'forward': 0x01,  # Двигаться вперед
             'backward': 0x02,  # Двигаться назад
@@ -76,7 +79,8 @@ class RobotControl:
         return self._build_command([0x00], [command_byte, 0x00])
 
     def set_left_motor_speed(self, speed):
-        """Устанавливает скорость левого двигателя (от 0 до 100)"""
+        if not (0 <= speed <= 255):
+            raise ValueError(f"Некорректная скорость: {speed}. Должна быть от 0 до 255.")
         return self._build_command([0x02], [0x01, speed])
 
     def set_right_motor_speed(self, speed):
@@ -89,16 +93,16 @@ class RobotControl:
             self.send_to_robot(byte_command, 0.235)
         elif angle == 30:
             byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.314)
+            self.send_to_robot(byte_command, 0.2)
         elif angle == 45:
             byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.414)
+            self.send_to_robot(byte_command, 0.23)
         elif angle == 60:
             byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.514)
+            self.send_to_robot(byte_command, 0.38)
         elif angle == 90:
             byte_command = self.set_left_motor_speed(90) + self.set_right_motor_speed(80) + self.move_direction('turn_left')
-            self.send_to_robot(byte_command, 0.823)
+            self.send_to_robot(byte_command, 0.57)
             
             
     def set_rotation_r(self, angle):
@@ -107,16 +111,16 @@ class RobotControl:
             self.send_to_robot(byte_command, 0.235)
         elif angle == 30:
             byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.314)
+            self.send_to_robot(byte_command, 0.22)
         elif angle == 45:
             byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.414)
+            self.send_to_robot(byte_command, 0.3)
         elif angle == 60:
             byte_command = self.set_left_motor_speed(100) + self.set_right_motor_speed(100) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.514)
+            self.send_to_robot(byte_command, 0.39)
         elif angle == 90:
             byte_command = self.set_left_motor_speed(90) + self.set_right_motor_speed(80) + self.move_direction('turn_right')
-            self.send_to_robot(byte_command, 0.824)
+            self.send_to_robot(byte_command, 0.587)
             
             
     def set_rotation_func(self, angle):
@@ -165,15 +169,126 @@ class RobotControl:
         byte_command = self.move_robot('forward', meters)
         self.send_to_robot(byte_command, delay)
         
-    def follow_path(self, path):
-        for i in range(len(path)):
-            if (path[i][0] == 'null'):
-                self.move_meters(path[i][1], 0.1)
-            elif (path[i][0] == 'right'):
-                self.set_rotation_r(90)
-                self.move_meters(path[i][1], 0.1)
-            elif (path[i][0] == 'left'):
-                self.set_rotation(90)
-                self.move_meters(path[i][1], 0.1)
+        
+    # def follow_path(self, path):
+    #     """Следовать по пути, найденному алгоритмом A*"""
+
+    #     for i in range(len(path) - 1):
+    #         current = path[i]
+    #         next_pos = path[i + 1]
+    #         direction = self.get_direction(current, next_pos)
+    #         self.send_to_robot(self.move_robot(direction, speed=50))
+    #         time.sleep(1)  # Подождать 1 секунду между движениями
+
+    # def get_direction(self, current, next_pos):
+    #     """Определить направление движения на основе текущей и следующей позиции"""
+    #     if next_pos[0] > current[0]:
+    #         return 'forward'
+    #     elif next_pos[0] < current[0]:
+    #         return 'backward'
+    #     elif next_pos[1] > current[1]:
+    #         return 'turn_right'
+    #     elif next_pos[1] < current[1]:
+    #         return 'turn_left'
+    #     else:
+    #         return 'stop'
+    # def follow_path(self, path):
+    #     for i in range(len(path)):
+    #         if (path[i][0] == 'null'):
+    #             self.move_meters(path[i][1], 0.1)
+    #         elif (path[i][0] == 'right'):
+    #             self.set_rotation_r(90)
+    #             self.move_meters(path[i][1], 0.1)
+    #         elif (path[i][0] == 'left'):
+    #             self.set_rotation(90)
+    #             self.move_meters(path[i][1], 0.1)
+    #         else:
+    #             print("Goyda")
+    
+    def follow_path(self, path_commands, path_speed=50, base_delay=0.5, unit_delay=0.1):
+        if not path_commands:
+            print("Путь не найден.")
+            return
+
+        print(f"Робот следует по пути из {len(path_commands)} команд.")
+
+        # Определяем карту переходов для направлений
+        orientation_map = {
+            'up': {'dx': 0, 'dy': -1},
+            'down': {'dx': 0, 'dy': 1},
+            'left': {'dx': -1, 'dy': 0},
+            'right': {'dx': 1, 'dy': 0}
+        }
+
+        # Проходим по списку команд
+        for direction, steps in path_commands:
+            print(f">>> Направление: {direction}, Шагов: {steps}")
+
+            # Рассчитываем общее время движения
+            delay = base_delay + steps * unit_delay
+
+            # Если направление 'null', двигаемся прямо без поворота
+            if direction == 'null':
+                print("Направление 'null', двигаемся прямо.")
+                move_command = (
+                    self.move_direction('forward') +
+                    self.set_left_motor_speed(path_speed) +
+                    self.set_right_motor_speed(path_speed)
+                )
+                self.send_to_robot(move_command, delay=delay)
+
+                # Обновляем координаты после завершения движения
+                self.x += orientation_map[self.orientation]['dx'] * steps
+                self.y += orientation_map[self.orientation]['dy'] * steps
+                print(f"Текущие координаты: ({self.x}, {self.y})")
+
             else:
-                print("Goyda")
+                # Если направление задано и не совпадает с текущей ориентацией, поворачиваем
+                if direction != self.orientation:
+                    turn_command = None
+
+                    # Определяем команду поворота
+                    if (self.orientation, direction) in [
+                        ('up', 'right'), ('right', 'down'),
+                        ('down', 'left'), ('left', 'up')
+                    ]:
+                        turn_command = 'turn_right'
+                    elif (self.orientation, direction) in [
+                        ('up', 'left'), ('left', 'down'),
+                        ('down', 'right'), ('right', 'up')
+                    ]:
+                        turn_command = 'turn_left'
+                    else:  # Поворот на 180°
+                        turn_command = 'turn_right'
+                        self.send_to_robot(self.move_direction(turn_command), delay=2)
+                        self.update_orientation(direction)
+
+                    # Выполняем поворот
+                    if turn_command:
+                        if turn_command == 'turn_left':
+                            self.set_rotation(90)
+                        else:
+                            self.set_rotation_r(90)
+                        self.update_orientation(direction)
+
+                # Двигаемся вперед после поворота
+                move_command = (
+                    self.move_direction('forward') +
+                    self.set_left_motor_speed(path_speed) +
+                    self.set_right_motor_speed(path_speed)
+                )
+                self.send_to_robot(move_command, delay=delay)
+
+                # Обновляем координаты
+                self.x += orientation_map[self.orientation]['dx'] * steps
+                self.y += orientation_map[self.orientation]['dy'] * steps
+                print(f"Текущие координаты: ({self.x}, {self.y})")
+
+        print("Робот завершил движение по пути.")
+
+
+        
+    def update_orientation(self, new_orientation):
+        """Обновляет текущее направление робота."""
+        print(f"Меняем ориентацию на: {new_orientation}")
+        self.orientation = new_orientation
