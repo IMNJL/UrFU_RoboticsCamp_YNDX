@@ -379,23 +379,19 @@ image = cv2.imread('src/maze.png')
 not_contours = a.contours(image)
 
 matr = a.get_matrix(not_contours)
-coord, X, Y, X_border, Y_border = a.get_trajectory(matr, 5, 15, 380, 300)
+coord, X, Y, X_border, Y_border = a.get_trajectory(matr, 5, 15, 150, 150)
+
 FINAL_PATH = a.path_segments(coord)
 print(FINAL_PATH)
 # print(len(FINAL_PATH))
 
+robot = rb.RobotControl(host="192.168.12.188", port=2001)
 # robot = rb.RobotControl(host="192.168.2.89", port=2001)
-
-# robot.follow_path(FINAL_PATH)
+# while True:
+#     robot.send_to_robot(robot._build_command([0x06, 0x04], 0.1))
+    
+# robot.send_to_robot(robot.set_rotation(60), 0.001)
+robot.follow_path(FINAL_PATH, 100)
 # robot.set_rotation(30)
 
-
 a.draw_trajectory(coord, image, 5, 15, 380, 300, X, Y, X_border, Y_border)
-
-# x_st = 10
-# y_st = 10
-# x_e = 100
-# y_e = 100
-# print(a.resize(400, 310))
-# a.compute(x_st, y_st, x_e, y_e)
-# a.print_path()
