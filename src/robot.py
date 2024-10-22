@@ -165,11 +165,11 @@ class RobotControl:
 
 
     def move_meters(self, cantimeters, delay):
-        delay = 0.23506 * cantimeters + 0.189187
+        delay = 0.023506 * cantimeters + 0.189187
         byte_command = self.move_robot('forward', 80)
         self.send_to_robot(byte_command, delay)
    
-    def follow_path(self, path_commands, path_speed=50, base_delay=0.5, unit_delay=0.1):
+    def follow_path(self, path_commands, path_speed=80, base_delay=0.023506, unit_delay=0.189187):
         if not path_commands:
             print("Путь не найден.")
             return
@@ -189,7 +189,7 @@ class RobotControl:
             print(f">>> Направление: {direction}, Шагов: {steps}")
 
             # Рассчитываем общее время движения
-            delay = base_delay + steps * unit_delay
+            delay = base_delay * steps + unit_delay
 
             # Если направление 'null', двигаемся прямо без поворота
             if direction == 'null':
