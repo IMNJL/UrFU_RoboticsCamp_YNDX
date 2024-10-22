@@ -230,9 +230,9 @@ class RobotControl:
                     # Выполняем поворот
                     if turn_command:
                         if turn_command == 'turn_left':
-                            self.set_rotation(90)
+                            self.set_rotation(90, 'left')
                         else:
-                            self.set_rotation_r(90)
+                            self.set_rotation(90, 'right')
                         self.update_orientation(direction)
 
                 # Двигаемся вперед после поворота
