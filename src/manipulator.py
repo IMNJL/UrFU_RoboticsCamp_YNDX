@@ -138,10 +138,3 @@ class manipulator:
             else:
                 command_bytes += self.set_robohand_position(int(cur_angle1), int(cur_angle2), 90, 15)
 
-
-
-
-
-
-
-
